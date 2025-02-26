@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Sensori Shelly</title>
+    <style>
+        body {font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+
+        .container { display: flexbox; gap: 30px; margin-bottom: 13px; padding: 20px; border: 1px solid #ccc; border-radius: 10px;  }
+
+        h2 { color: #333; }
+        .temperature { font-size: 24px; font-weight: bold; margin-top: 10px; }
+
+
+        .spia {
+            width: 10px;
+            height: 10px;
+            background-color: #00ff15;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff15;
+            animation: lampeggia 1s infinite alternate;
+        }
+
+        @keyframes lampeggia {
+            0% { opacity: 1; box-shadow: 0 0 10px #00ff15; }
+            100% { opacity: 0.3; box-shadow: 0 0 2px #00ff15; }
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <h2>Temperature Sensori Puffer</h2>
+        <div class="container">
+            <p class="spia"></p>
+            <p>Acqua Sanitaria: <span class="temperature" id="temp100">--</span> °C</p> <!--Sensore 100--> 
+        </div>
+        <div class="container">
+        <p class="spia"></p>
+        <p>Mandata Riscaldamento: <span class="temperature" id="temp101">--</span> °C</p> <!--Sensore 101-->
+        </div>
+    </div>
+
+    <script>
+async function getShellyTemperature() {
+    try {
+        // URL per ottenere i dati da Shelly Cloud
+        const response = await fetch('https://shelly-44-eu.shelly.cloud/device/status?auth_key=MTIwMjkydWlk919EF8840C3FA47C3F7F97F88FBCC333AFD111FFB0913885C5B7DE4AC14AA5CE477DF4BE424B21AC&id=c4d8d55302d4');
+        // Controlla se la risposta è ok
+        if (!response.ok) {
+            throw new Error(`Errore HTTP! Status: ${response.status}`);
+        }
+
+        // Converte la risposta in formato JSON
+        const data = await response.json(); 
+
+        // Stampa i dati ricevuti (per debug)
+        console.log("Dati ricevuti da Shelly:", data);
+
+        // Estrai le temperature
+        const temp100C = data.data.device_status['temperature:100'].tC; // Temperatura 100 in Celsius
+        const temp101C = data.data.device_status['temperature:101'].tC; // Temperatura 101 in Celsius
+
+        // Stampa le temperature (per debug)
+        console.log("Temperatura 100 (°C):", temp100C);
+        console.log("Temperatura 101 (°C):", temp101C);
+
+        // Aggiorna il contenuto della pagina con le temperature
+        document.getElementById('temp100').textContent = temp100C.toFixed(2); // Mostra 2 decimali
+        document.getElementById('temp101').textContent = temp101C.toFixed(2); // Mostra 2 decimali
+
+    } catch (error) {
+        console.error("Errore nel recupero dei dati da Shelly:", error);
+    }
+}
+
+// Chiama la funzione quando la pagina viene caricata
+getShellyTemperature();
+
+// Rendi periodico l'aggiornamento ogni 10 secondi
+setInterval(getShellyTemperature, 10000); // Ogni 10 secondi
+    </script>
+</body>
+</html>
